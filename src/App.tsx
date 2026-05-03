@@ -1,13 +1,13 @@
 import { Dropzone } from './components/Dropzone';
 import { FrameTable } from './components/FrameTable';
-import { BulkEditBar } from './components/BulkEditBar';
+import { FrameToolbar } from './components/FrameToolbar';
+import { BulkEditPanel } from './components/BulkEditPanel';
 import { SidePanel } from './components/SidePanel';
 import { Toast } from './components/Toast';
 import { useFrameStore } from './store/useFrameStore';
 
 function App() {
     const frames = useFrameStore((s) => s.frames);
-    const selectedIds = useFrameStore((s) => s.selectedIds);
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -18,19 +18,13 @@ function App() {
                 <Dropzone />
                 {frames.length > 0 && (
                     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
-                        <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-3 text-sm text-gray-500">
-                            <span>{frames.length}개 프레임</span>
-                            {selectedIds.size > 0 && (
-                                <span className="text-blue-600 font-medium">{selectedIds.size}개 선택됨</span>
-                            )}
-                            <span className="text-xs text-gray-400">행 클릭 시 편집</span>
-                        </div>
-                        <BulkEditBar />
+                        <FrameToolbar />
                         <FrameTable />
                     </div>
                 )}
             </main>
             <SidePanel />
+            <BulkEditPanel />
             <Toast />
         </div>
     );

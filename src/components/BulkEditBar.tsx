@@ -17,7 +17,7 @@ const FIELD_LABELS: Record<FieldKey, string> = {
 };
 
 export function BulkEditBar() {
-    const { selectedIds, batchUpdateMeta, clearSelection } = useFrameStore();
+    const { selectedIds, batchUpdateMeta } = useFrameStore();
     const [field, setField] = useState<FieldKey>('iso');
     const [inputVal, setInputVal] = useState('');
 
@@ -58,10 +58,6 @@ export function BulkEditBar() {
 
     return (
         <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border-b border-blue-100">
-            <span className="text-sm font-medium text-blue-700 shrink-0">
-                {selectedIds.size}개 선택됨
-            </span>
-
             <div className="flex items-center gap-2 flex-1 flex-wrap">
                 <select
                     value={field}
@@ -108,13 +104,6 @@ export function BulkEditBar() {
                     일괄 적용
                 </button>
             </div>
-
-            <button
-                onClick={clearSelection}
-                className="shrink-0 text-xs text-gray-400 hover:text-gray-600 px-2 py-1 rounded hover:bg-gray-100"
-            >
-                선택 해제
-            </button>
         </div>
     );
 }

@@ -7,12 +7,14 @@ interface FrameStore {
     selectedIds: Set<string>;
     activeFrameId: string | null;
     lastClickedId: string | null;
+    bulkEditOpen: boolean;
     addFrames: (frames: FrameItem[]) => void;
     removeFrames: (ids: string[]) => void;
     toggleSelect: (id: string, shiftHeld: boolean, lastClickedId: string | null) => void;
     selectAll: () => void;
     clearSelection: () => void;
     setActiveFrameId: (id: string | null) => void;
+    setBulkEditOpen: (open: boolean) => void;
     updateFrameMeta: (id: string, patch: Partial<FrameMeta>) => void;
     batchUpdateMeta: (ids: string[], patch: Partial<FrameMeta>) => void;
     updateFrameNumber: (id: string, n: number | null) => void;
@@ -23,6 +25,7 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     selectedIds: new Set(),
     activeFrameId: null,
     lastClickedId: null,
+    bulkEditOpen: false,
 
     addFrames: (newFrames) =>
         set((state) => ({ frames: [...state.frames, ...newFrames] })),
@@ -61,6 +64,8 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     clearSelection: () => set({ selectedIds: new Set(), lastClickedId: null }),
 
     setActiveFrameId: (id) => set({ activeFrameId: id }),
+
+    setBulkEditOpen: (open) => set({ bulkEditOpen: open }),
 
     updateFrameMeta: (id, patch) =>
         set((state) => ({
