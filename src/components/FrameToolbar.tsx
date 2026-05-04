@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useFrameStore } from '../store/useFrameStore';
 import { useToastStore } from '../store/useToastStore';
 import { exportFrames } from '../lib/export';
+import { decodeClipboardPayload } from '../lib/clipboard';
 
 export function FrameToolbar() {
     const frames = useFrameStore((s) => s.frames);
@@ -10,8 +11,37 @@ export function FrameToolbar() {
     const clearSelection = useFrameStore((s) => s.clearSelection);
     const setActiveFrameId = useFrameStore((s) => s.setActiveFrameId);
     const setBulkEditOpen = useFrameStore((s) => s.setBulkEditOpen);
+    const setPendingImport = useFrameStore((s) => s.setPendingImport);
     const toast = useToastStore((s) => s.show);
     const [exporting, setExporting] = useState(false);
+    const [filoInputOpen, setFiloInputOpen] = useState(false);
+    const [filoText, setFiloText] = useState('');
+    const [filoLoading, setFiloLoading] = useState(false);
+    const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+    const handleFiloOpen = () => {
+        setFiloText('');
+        setFiloInputOpen(true);
+        setTimeout(() => textareaRef.current?.focus(), 50);
+    };
+
+    const handleFiloSubmit = async () => {
+        const trimmed = filoText.trim();
+        if (!trimmed) return;
+        setFiloLoading(true);
+        try {
+            const payload = await decodeClipboardPayload(trimmed);
+            if (!payload) {
+                toast('유효하지 않은 Filo 데이터입니다');
+                return;
+            }
+            setFiloInputOpen(false);
+            setFiloText('');
+            setPendingImport(payload);
+        } finally {
+            setFiloLoading(false);
+        }
+    };
 
     const targets = selectedIds.size > 0 ? frames.filter((f) => selectedIds.has(f.id)) : frames;
     const errorCount = targets.filter((f) => Object.keys(f.errors).length > 0).length;
@@ -80,6 +110,19 @@ export function FrameToolbar() {
                     <span className="text-xs text-red-500 font-medium">오류 {errorCount}개</span>
                 )}
                 <button
+                    onClick={handleFiloOpen}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path
+                            fillRule="evenodd"
+                            d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                        />
+                    </svg>
+                    filo 데이터 붙여넣기
+                </button>
+                <button
                     onClick={handleExport}
                     disabled={!canExport}
                     title={
@@ -124,11 +167,78 @@ export function FrameToolbar() {
                                     clipRule="evenodd"
                                 />
                             </svg>
-                            내보내기
+                            새 파일로 내보내기
                         </>
                     )}
                 </button>
             </div>
+
+            {filoInputOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div
+                        className="absolute inset-0 bg-black/30"
+                        onClick={() => setFiloInputOpen(false)}
+                    />
+                    <div className="relative z-10 bg-white rounded-xl border border-gray-200 shadow-2xl w-full max-w-lg flex flex-col gap-4 p-5">
+                        <div className="flex items-start justify-between gap-2">
+                            <div>
+                                <h2 className="text-sm font-semibold text-gray-800">
+                                    filo 데이터 붙여넣기
+                                </h2>
+                                <p className="text-xs text-gray-400 mt-0.5">
+                                    filo 앱에서 복사한 코드를 붙여넣으세요.
+                                </p>
+                            </div>
+                            <button
+                                onClick={() => setFiloInputOpen(false)}
+                                className="shrink-0 p-1 rounded hover:bg-gray-100 text-gray-400 hover:text-gray-600"
+                            >
+                                <svg
+                                    className="w-4 h-4"
+                                    viewBox="0 0 16 16"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
+                                    <path d="M3 3l10 10M13 3L3 13" />
+                                </svg>
+                            </button>
+                        </div>
+                        <textarea
+                            ref={textareaRef}
+                            value={filoText}
+                            onChange={(e) => setFiloText(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey))
+                                    handleFiloSubmit();
+                            }}
+                            placeholder="FIXIF1:..."
+                            rows={4}
+                            className="w-full text-xs font-mono border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-300"
+                        />
+                        <div className="flex justify-end gap-2">
+                            <button
+                                onClick={() => setFiloInputOpen(false)}
+                                className="px-4 py-1.5 text-sm font-medium text-gray-600 rounded-lg border border-gray-200 hover:bg-gray-50 active:bg-gray-100 transition-colors"
+                            >
+                                취소
+                            </button>
+                            <button
+                                onClick={handleFiloSubmit}
+                                disabled={!filoText.trim() || filoLoading}
+                                className={[
+                                    'px-4 py-1.5 text-sm font-medium rounded-lg transition-colors',
+                                    filoText.trim() && !filoLoading
+                                        ? 'bg-blue-600 text-white hover:bg-blue-700 active:bg-blue-800'
+                                        : 'bg-gray-200 text-gray-400 cursor-not-allowed',
+                                ].join(' ')}
+                            >
+                                {filoLoading ? '처리 중…' : '불러오기'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

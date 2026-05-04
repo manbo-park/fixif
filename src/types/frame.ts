@@ -1,3 +1,8 @@
+export interface GpsCoords {
+    lat: number;
+    lng: number;
+}
+
 export interface FrameMeta {
     dateTimeOriginal: Date | null;
     make: string | null;
@@ -7,6 +12,7 @@ export interface FrameMeta {
     exposureTime: string | null;
     iso: number | null;
     userComment: string | null;
+    gps: GpsCoords | null;
 }
 
 export interface FrameItem {

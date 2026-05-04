@@ -45,6 +45,14 @@ function formatExifDate(date: Date): string {
     return `${y}:${mo}:${d} ${h}:${mi}:${s}`;
 }
 
+function decimalToDMS(decimal: number): [[number, number], [number, number], [number, number]] {
+    const deg = Math.floor(decimal);
+    const minFrac = (decimal - deg) * 60;
+    const min = Math.floor(minFrac);
+    const sec = (minFrac - min) * 60;
+    return [[deg, 1], [min, 1], [Math.round(sec * 100), 100]];
+}
+
 function formatTimezoneOffset(date: Date): string {
     const offsetMin = -date.getTimezoneOffset();
     const sign = offsetMin >= 0 ? '+' : '-';
@@ -154,6 +162,18 @@ export async function writeExif(file: File, meta: FrameMeta): Promise<Blob> {
         exifObj['Exif'][piexif.ExifIFD.UserComment] = encodeUserComment(meta.userComment);
     } else {
         delete exifObj['Exif'][piexif.ExifIFD.UserComment];
+    }
+
+    // GPS
+    if (meta.gps !== null) {
+        if (!exifObj['GPS']) exifObj['GPS'] = {};
+        const { lat, lng } = meta.gps;
+        exifObj['GPS'][piexif.GPSIFD.GPSLatitudeRef] = lat >= 0 ? 'N' : 'S';
+        exifObj['GPS'][piexif.GPSIFD.GPSLatitude] = decimalToDMS(Math.abs(lat));
+        exifObj['GPS'][piexif.GPSIFD.GPSLongitudeRef] = lng >= 0 ? 'E' : 'W';
+        exifObj['GPS'][piexif.GPSIFD.GPSLongitude] = decimalToDMS(Math.abs(lng));
+    } else {
+        delete exifObj['GPS'];
     }
 
     const exifBytes = piexif.dump(exifObj);

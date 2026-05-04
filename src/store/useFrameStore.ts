@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import type { FrameItem, FrameMeta } from '../types/frame';
+import type { FiloPayload } from '../types/filo';
 import { validateMeta } from '../lib/validation';
 
 interface FrameStore {
@@ -8,6 +9,7 @@ interface FrameStore {
     activeFrameId: string | null;
     lastClickedId: string | null;
     bulkEditOpen: boolean;
+    pendingImport: FiloPayload | null;
     addFrames: (frames: FrameItem[]) => void;
     removeFrames: (ids: string[]) => void;
     toggleSelect: (id: string, shiftHeld: boolean, lastClickedId: string | null) => void;
@@ -15,6 +17,7 @@ interface FrameStore {
     clearSelection: () => void;
     setActiveFrameId: (id: string | null) => void;
     setBulkEditOpen: (open: boolean) => void;
+    setPendingImport: (payload: FiloPayload | null) => void;
     updateFrameMeta: (id: string, patch: Partial<FrameMeta>) => void;
     batchUpdateMeta: (ids: string[], patch: Partial<FrameMeta>) => void;
     updateFrameNumber: (id: string, n: number | null) => void;
@@ -26,6 +29,7 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     activeFrameId: null,
     lastClickedId: null,
     bulkEditOpen: false,
+    pendingImport: null,
 
     addFrames: (newFrames) =>
         set((state) => ({ frames: [...state.frames, ...newFrames] })),
@@ -66,6 +70,8 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     setActiveFrameId: (id) => set({ activeFrameId: id }),
 
     setBulkEditOpen: (open) => set({ bulkEditOpen: open }),
+
+    setPendingImport: (payload) => set({ pendingImport: payload }),
 
     updateFrameMeta: (id, patch) =>
         set((state) => ({

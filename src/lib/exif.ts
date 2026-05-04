@@ -10,12 +10,17 @@ const EXIF_TAGS = [
     'ExposureTime',
     'ISO',
     'UserComment',
+    'latitude',
+    'longitude',
 ] as const;
 
 export async function readExif(file: File): Promise<FrameMeta> {
     try {
-        const data = await exifr.parse(file, { pick: [...EXIF_TAGS] });
+        const data = await exifr.parse(file, { pick: [...EXIF_TAGS], gps: true });
         if (!data) return emptyMeta();
+
+        const lat = typeof data.latitude === 'number' ? data.latitude : null;
+        const lng = typeof data.longitude === 'number' ? data.longitude : null;
 
         return {
             dateTimeOriginal: data.DateTimeOriginal instanceof Date ? data.DateTimeOriginal : null,
@@ -26,6 +31,7 @@ export async function readExif(file: File): Promise<FrameMeta> {
             exposureTime: typeof data.ExposureTime === 'number' ? formatShutter(data.ExposureTime) : null,
             iso: typeof data.ISO === 'number' ? data.ISO : null,
             userComment: typeof data.UserComment === 'string' ? data.UserComment || null : null,
+            gps: lat !== null && lng !== null ? { lat, lng } : null,
         };
     } catch {
         return emptyMeta();
@@ -61,5 +67,6 @@ function emptyMeta(): FrameMeta {
         exposureTime: null,
         iso: null,
         userComment: null,
+        gps: null,
     };
 }
