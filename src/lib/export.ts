@@ -1,5 +1,6 @@
 import JSZip from 'jszip';
 import { writeExif } from './exifWriter';
+import type { WriteExifOptions } from './exifWriter';
 import type { FrameItem } from '../types/frame';
 
 function buildFilename(originalName: string, suffix: string): string {
@@ -34,12 +35,16 @@ function buildZipStamp(): string {
 
 const DEFAULT_SUFFIX = '_fixif';
 
-export async function exportFrames(frames: FrameItem[], suffix = DEFAULT_SUFFIX): Promise<void> {
+export async function exportFrames(
+    frames: FrameItem[],
+    suffix = DEFAULT_SUFFIX,
+    options: WriteExifOptions = {},
+): Promise<void> {
     if (frames.length === 0) return;
 
     if (frames.length === 1) {
         const frame = frames[0];
-        const blob = await writeExif(frame.file, frame.meta);
+        const blob = await writeExif(frame.file, frame.meta, options);
         triggerDownload(blob, buildFilename(frame.file.name, suffix));
         return;
     }
@@ -47,7 +52,7 @@ export async function exportFrames(frames: FrameItem[], suffix = DEFAULT_SUFFIX)
     const zip = new JSZip();
     await Promise.all(
         frames.map(async (frame) => {
-            const blob = await writeExif(frame.file, frame.meta);
+            const blob = await writeExif(frame.file, frame.meta, options);
             zip.file(buildFilename(frame.file.name, suffix), blob);
         }),
     );

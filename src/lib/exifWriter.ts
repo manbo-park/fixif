@@ -94,7 +94,13 @@ function binaryStringToBlob(str: string): Blob {
     return new Blob([bytes], { type: 'image/jpeg' });
 }
 
-export async function writeExif(file: File, meta: FrameMeta): Promise<Blob> {
+export interface WriteExifOptions {
+    includeGps?: boolean;
+    includeMemo?: boolean;
+}
+
+export async function writeExif(file: File, meta: FrameMeta, options: WriteExifOptions = {}): Promise<Blob> {
+    const { includeGps = true, includeMemo = true } = options;
     const binaryStr = await fileToBinaryString(file);
     const exifObj = piexif.load(binaryStr);
 
@@ -158,14 +164,14 @@ export async function writeExif(file: File, meta: FrameMeta): Promise<Blob> {
     }
 
     // UserComment (UTF-8 바이트로 저장)
-    if (meta.userComment !== null && meta.userComment !== '') {
+    if (includeMemo && meta.userComment !== null && meta.userComment !== '') {
         exifObj['Exif'][piexif.ExifIFD.UserComment] = encodeUserComment(meta.userComment);
     } else {
         delete exifObj['Exif'][piexif.ExifIFD.UserComment];
     }
 
     // GPS
-    if (meta.gps !== null) {
+    if (includeGps && meta.gps !== null) {
         if (!exifObj['GPS']) exifObj['GPS'] = {};
         const { lat, lng } = meta.gps;
         exifObj['GPS'][piexif.GPSIFD.GPSLatitudeRef] = lat >= 0 ? 'N' : 'S';

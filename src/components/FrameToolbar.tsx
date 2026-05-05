@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { useFrameStore } from '../store/useFrameStore';
 import { useToastStore } from '../store/useToastStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { exportFrames } from '../lib/export';
 import { decodeClipboardPayload } from '../lib/clipboard';
 
@@ -13,6 +14,9 @@ export function FrameToolbar() {
     const setBulkEditOpen = useFrameStore((s) => s.setBulkEditOpen);
     const setPendingImport = useFrameStore((s) => s.setPendingImport);
     const toast = useToastStore((s) => s.show);
+    const exportSuffix = useSettingsStore((s) => s.exportSuffix);
+    const includeGps = useSettingsStore((s) => s.includeGps);
+    const includeMemo = useSettingsStore((s) => s.includeMemo);
     const [exporting, setExporting] = useState(false);
     const [filoInputOpen, setFiloInputOpen] = useState(false);
     const [filoText, setFiloText] = useState('');
@@ -51,7 +55,7 @@ export function FrameToolbar() {
         if (!canExport) return;
         setExporting(true);
         try {
-            await exportFrames(targets);
+            await exportFrames(targets, exportSuffix, { includeGps, includeMemo });
             toast(
                 targets.length > 1
                     ? `${targets.length}개 파일을 ZIP으로 내보냈습니다`
