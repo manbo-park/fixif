@@ -55,10 +55,16 @@ export function ImagePreviewModal({
                 setLoaded(false);
                 onNavigate(currentIndex + 1);
             }
+            if (e.key === 'q' || e.key === 'ㅂ') rotate(-90);
+            if (e.key === 'e' || e.key === 'ㄷ') rotate(90);
+            if (e.key === 'r' || e.key === 'ㄱ') {
+                setDisplayRotation(0);
+                updateFrameRotation(frame.id, 0);
+            }
         };
         document.addEventListener('keydown', handleKey);
         return () => document.removeEventListener('keydown', handleKey);
-    }, [onClose, onNavigate, currentIndex, hasPrev, hasNext]);
+    }, [onClose, onNavigate, currentIndex, hasPrev, hasNext, displayRotation]);
 
     if (!frame) return null;
 
