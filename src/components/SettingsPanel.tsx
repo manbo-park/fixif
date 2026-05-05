@@ -115,7 +115,7 @@ export function SettingsPanel() {
                                 <div className="min-w-0">
                                     <p className="text-sm font-medium text-gray-600">위치 정보</p>
                                     <p className="text-xs text-gray-400 mt-0.5">
-                                        GPS 데이터를 내보내기에 포함
+                                        위치 정보를 내보내기에 포함
                                     </p>
                                 </div>
                                 <Toggle checked={includeGps} onChange={setIncludeGps} />

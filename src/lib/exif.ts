@@ -30,7 +30,7 @@ export async function readExif(file: File): Promise<FrameMeta> {
             fNumber: typeof data.FNumber === 'number' ? data.FNumber : null,
             exposureTime: typeof data.ExposureTime === 'number' ? formatShutter(data.ExposureTime) : null,
             iso: typeof data.ISO === 'number' ? data.ISO : null,
-            userComment: typeof data.UserComment === 'string' ? data.UserComment || null : null,
+            userComment: parseUserComment(data.userComment),
             gps: lat !== null && lng !== null ? { lat, lng } : null,
         };
     } catch {
@@ -47,6 +47,23 @@ export async function readThumbnail(file: File): Promise<string | null> {
         }
     } catch {
         // no thumbnail in EXIF
+    }
+    return null;
+}
+
+function parseUserComment(raw: unknown): string | null {
+    if (typeof raw === 'string') {
+        // exifr가 8바이트 인코딩 prefix(null 문자)를 포함한 문자열로 반환
+        // trim()은 \0을 제거하지 않으므로 별도 처리
+        return raw.replace(/^\0+/, '').trim() || null;
+    }
+    if (ArrayBuffer.isView(raw)) {
+        const arr = new Uint8Array(
+            (raw as ArrayBufferView).buffer,
+            (raw as ArrayBufferView).byteOffset,
+            (raw as ArrayBufferView).byteLength,
+        );
+        return new TextDecoder('utf-8').decode(arr.slice(8)).trim() || null;
     }
     return null;
 }
