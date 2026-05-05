@@ -30,7 +30,7 @@ async function decodeGzipBase64(b64: string): Promise<string> {
 }
 
 export async function decodeClipboardPayload(text: string): Promise<FiloPayload | null> {
-    const PREFIX = 'FIXIF1:';
+    const PREFIX = 'FILO1:';
     if (!text.startsWith(PREFIX)) return null;
     try {
         const b64 = text.slice(PREFIX.length);

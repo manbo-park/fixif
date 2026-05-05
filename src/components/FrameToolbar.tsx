@@ -216,7 +216,7 @@ export function FrameToolbar() {
                                 if (e.key === 'Enter' && (e.metaKey || e.ctrlKey))
                                     handleFiloSubmit();
                             }}
-                            placeholder="FIXIF1:..."
+                            placeholder="FILO1:..."
                             rows={4}
                             className="w-full text-xs font-mono border border-gray-200 rounded-lg px-3 py-2 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-300"
                         />
