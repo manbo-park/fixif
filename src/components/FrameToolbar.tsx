@@ -13,6 +13,10 @@ export function FrameToolbar() {
     const setActiveFrameId = useFrameStore((s) => s.setActiveFrameId);
     const setBulkEditOpen = useFrameStore((s) => s.setBulkEditOpen);
     const setPendingImport = useFrameStore((s) => s.setPendingImport);
+    const past = useFrameStore((s) => s.past);
+    const future = useFrameStore((s) => s.future);
+    const undo = useFrameStore((s) => s.undo);
+    const redo = useFrameStore((s) => s.redo);
     const toast = useToastStore((s) => s.show);
     const exportSuffix = useSettingsStore((s) => s.exportSuffix);
     const includeGps = useSettingsStore((s) => s.includeGps);
@@ -76,6 +80,31 @@ export function FrameToolbar() {
             {selectedIds.size > 0 && (
                 <span className="text-blue-600 font-medium">{selectedIds.size}개 선택됨</span>
             )}
+
+            <div className="flex items-center gap-0.5">
+                <button
+                    onClick={undo}
+                    disabled={past.length === 0}
+                    title="실행 취소 (Ctrl+Z)"
+                    className="p-1.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 7h10a4 4 0 0 1 0 8H7" />
+                        <path d="M3 7l3-3M3 7l3 3" />
+                    </svg>
+                </button>
+                <button
+                    onClick={redo}
+                    disabled={future.length === 0}
+                    title="다시 실행 (Ctrl+Shift+Z)"
+                    className="p-1.5 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                >
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 7H7a4 4 0 0 0 0 8h6" />
+                        <path d="M17 7l-3-3M17 7l-3 3" />
+                    </svg>
+                </button>
+            </div>
 
             <div className="ml-auto flex items-center gap-2">
                 {selectedIds.size > 0 && (

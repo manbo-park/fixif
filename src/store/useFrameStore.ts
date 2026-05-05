@@ -3,8 +3,12 @@ import type { FrameItem, FrameMeta } from '../types/frame';
 import type { FiloPayload } from '../types/filo';
 import { validateMeta } from '../lib/validation';
 
+const MAX_HISTORY = 50;
+
 interface FrameStore {
     frames: FrameItem[];
+    past: FrameItem[][];
+    future: FrameItem[][];
     selectedIds: Set<string>;
     activeFrameId: string | null;
     lastClickedId: string | null;
@@ -20,12 +24,18 @@ interface FrameStore {
     setPendingImport: (payload: FiloPayload | null) => void;
     updateFrameMeta: (id: string, patch: Partial<FrameMeta>) => void;
     batchUpdateMeta: (ids: string[], patch: Partial<FrameMeta>) => void;
+    applyImport: (changes: Array<{ id: string; patch: Partial<FrameMeta> }>) => void;
     updateFrameNumber: (id: string, n: number | null) => void;
     updateFrameRotation: (id: string, rotation: 0 | 90 | 180 | 270) => void;
+    reorderFrames: (newFrames: FrameItem[]) => void;
+    undo: () => void;
+    redo: () => void;
 }
 
 export const useFrameStore = create<FrameStore>((set, get) => ({
     frames: [],
+    past: [],
+    future: [],
     selectedIds: new Set(),
     activeFrameId: null,
     lastClickedId: null,
@@ -75,32 +85,104 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     setPendingImport: (payload) => set({ pendingImport: payload }),
 
     updateFrameMeta: (id, patch) =>
-        set((state) => ({
-            frames: state.frames.map((f) => {
+        set((state) => {
+            const newFrames = state.frames.map((f) => {
                 if (f.id !== id) return f;
                 const newMeta = { ...f.meta, ...patch };
                 return { ...f, meta: newMeta, errors: validateMeta(newMeta) };
-            }),
-        })),
+            });
+            return {
+                frames: newFrames,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        }),
 
     batchUpdateMeta: (ids, patch) => {
         const idSet = new Set(ids);
-        set((state) => ({
-            frames: state.frames.map((f) => {
+        set((state) => {
+            const newFrames = state.frames.map((f) => {
                 if (!idSet.has(f.id)) return f;
                 const newMeta = { ...f.meta, ...patch };
                 return { ...f, meta: newMeta, errors: validateMeta(newMeta) };
-            }),
-        }));
+            });
+            return {
+                frames: newFrames,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        });
     },
 
+    applyImport: (changes) =>
+        set((state) => {
+            const patchMap = new Map(changes.map((c) => [c.id, c.patch]));
+            const newFrames = state.frames.map((f) => {
+                const patch = patchMap.get(f.id);
+                if (!patch) return f;
+                const newMeta = { ...f.meta, ...patch };
+                return { ...f, meta: newMeta, errors: validateMeta(newMeta) };
+            });
+            return {
+                frames: newFrames,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        }),
+
     updateFrameNumber: (id, n) =>
-        set((state) => ({
-            frames: state.frames.map((f) => (f.id === id ? { ...f, frameNumber: n } : f)),
-        })),
+        set((state) => {
+            const newFrames = state.frames.map((f) =>
+                f.id === id ? { ...f, frameNumber: n } : f,
+            );
+            return {
+                frames: newFrames,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        }),
 
     updateFrameRotation: (id, rotation) =>
-        set((state) => ({
-            frames: state.frames.map((f) => (f.id === id ? { ...f, rotation } : f)),
-        })),
+        set((state) => {
+            const newFrames = state.frames.map((f) =>
+                f.id === id ? { ...f, rotation } : f,
+            );
+            return {
+                frames: newFrames,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        }),
+
+    reorderFrames: (newOrderFrames) =>
+        set((state) => {
+            const reindexed = newOrderFrames.map((f, i) => ({ ...f, frameNumber: i + 1 }));
+            return {
+                frames: reindexed,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: [],
+            };
+        }),
+
+    undo: () =>
+        set((state) => {
+            if (state.past.length === 0) return state;
+            const prev = state.past[state.past.length - 1];
+            return {
+                frames: prev,
+                past: state.past.slice(0, -1),
+                future: [state.frames, ...state.future.slice(0, MAX_HISTORY - 1)],
+            };
+        }),
+
+    redo: () =>
+        set((state) => {
+            if (state.future.length === 0) return state;
+            const next = state.future[0];
+            return {
+                frames: next,
+                past: [...state.past.slice(-(MAX_HISTORY - 1)), state.frames],
+                future: state.future.slice(1),
+            };
+        }),
 }));

@@ -23,7 +23,7 @@ export function ClipboardImportModal() {
     const frames = useFrameStore((s) => s.frames);
     const pendingImport = useFrameStore((s) => s.pendingImport);
     const setPendingImport = useFrameStore((s) => s.setPendingImport);
-    const updateFrameMeta = useFrameStore((s) => s.updateFrameMeta);
+    const applyImport = useFrameStore((s) => s.applyImport);
     const toast = useToastStore((s) => s.show);
 
     const matches = useMemo(() => {
@@ -44,15 +44,15 @@ export function ClipboardImportModal() {
     const unmatchedCount = matches.length - matchedCount;
 
     const handleApply = () => {
-        let applied = 0;
-        for (const match of matches) {
-            if (!match.frameItem) continue;
-            const patch = filoFrameToMetaPatch(match.filoFrame, roll);
-            updateFrameMeta(match.frameItem.id, patch);
-            applied++;
-        }
+        const changes = matches
+            .filter((m) => m.frameItem !== null)
+            .map((m) => ({
+                id: m.frameItem!.id,
+                patch: filoFrameToMetaPatch(m.filoFrame, roll),
+            }));
+        applyImport(changes);
         setPendingImport(null);
-        toast(`${applied}개 프레임에 filo 데이터를 적용했습니다`, 'success');
+        toast(`${changes.length}개 프레임에 filo 데이터를 적용했습니다`, 'success');
     };
 
     const handleClose = () => setPendingImport(null);
