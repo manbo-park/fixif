@@ -81,7 +81,7 @@ function SortableTh({ label, sortKey, current, dir, onSort, className = '' }: So
     );
 }
 
-function FrameRow({ frame, onPreview }: { frame: FrameItem; onPreview: (file: File) => void }) {
+function FrameRow({ frame, onPreview }: { frame: FrameItem; onPreview: (id: string) => void }) {
     const { selectedIds, toggleSelect, lastClickedId, activeFrameId, setActiveFrameId } =
         useFrameStore();
     const isSelected = selectedIds.has(frame.id);
@@ -122,13 +122,18 @@ function FrameRow({ frame, onPreview }: { frame: FrameItem; onPreview: (file: Fi
             </td>
             <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                 {frame.thumbnailUrl ? (
-                    <img
-                        src={frame.thumbnailUrl}
-                        alt=""
-                        className="w-12 h-12 object-cover rounded cursor-zoom-in hover:opacity-80 transition-opacity"
-                        draggable={false}
-                        onClick={() => onPreview(frame.file)}
-                    />
+                    <div
+                        className="w-12 h-12 overflow-hidden rounded cursor-zoom-in"
+                        onClick={() => onPreview(frame.id)}
+                    >
+                        <img
+                            src={frame.thumbnailUrl}
+                            alt=""
+                            className="w-full h-full object-cover hover:opacity-80 transition-opacity"
+                            style={{ transform: `rotate(${frame.rotation}deg)` }}
+                            draggable={false}
+                        />
+                    </div>
                 ) : (
                     <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-gray-300 text-xs">
                         없음
@@ -173,7 +178,7 @@ export function FrameTable() {
     const { frames, selectedIds, selectAll, clearSelection } = useFrameStore();
     const [sortKey, setSortKey] = useState<SortKey | null>('frameNumber');
     const [sortDir, setSortDir] = useState<SortDir>('asc');
-    const [previewFile, setPreviewFile] = useState<File | null>(null);
+    const [previewFrameId, setPreviewFrameId] = useState<string | null>(null);
 
     const allSelected = frames.length > 0 && selectedIds.size === frames.length;
     const someSelected = selectedIds.size > 0 && !allSelected;
@@ -232,13 +237,22 @@ export function FrameTable() {
                 </thead>
                 <tbody>
                     {sortedFrames.map((frame) => (
-                        <FrameRow key={frame.id} frame={frame} onPreview={setPreviewFile} />
+                        <FrameRow key={frame.id} frame={frame} onPreview={setPreviewFrameId} />
                     ))}
                 </tbody>
             </table>
-            {previewFile && (
-                <ImagePreviewModal file={previewFile} onClose={() => setPreviewFile(null)} />
-            )}
+            {previewFrameId !== null && (() => {
+                const idx = sortedFrames.findIndex((f) => f.id === previewFrameId);
+                if (idx === -1) return null;
+                return (
+                    <ImagePreviewModal
+                        frames={sortedFrames}
+                        currentIndex={idx}
+                        onNavigate={(i) => setPreviewFrameId(sortedFrames[i].id)}
+                        onClose={() => setPreviewFrameId(null)}
+                    />
+                );
+            })()}
         </div>
     );
 }
