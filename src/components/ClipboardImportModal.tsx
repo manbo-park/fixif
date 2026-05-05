@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useFrameStore } from '../store/useFrameStore';
 import { useToastStore } from '../store/useToastStore';
 import { matchFrames, filoFrameToMetaPatch } from '../lib/matching';
@@ -30,6 +30,12 @@ export function ClipboardImportModal() {
         if (!pendingImport) return [];
         return matchFrames(pendingImport.roll.frames, frames);
     }, [pendingImport, frames]);
+
+    useEffect(() => {
+        if (!pendingImport) return;
+        document.body.style.overflow = 'hidden';
+        return () => { document.body.style.overflow = ''; };
+    }, [pendingImport]);
 
     if (!pendingImport) return null;
 
@@ -124,11 +130,17 @@ export function ClipboardImportModal() {
                                 <th className="px-4 py-2 text-left font-medium text-gray-400 w-32">
                                     촬영시간
                                 </th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-400">
+                                    렌즈
+                                </th>
                                 <th className="px-4 py-2 text-left font-medium text-gray-400 w-16">
                                     f
                                 </th>
                                 <th className="px-4 py-2 text-left font-medium text-gray-400 w-16">
                                     SS
+                                </th>
+                                <th className="px-4 py-2 text-left font-medium text-gray-400">
+                                    메모
                                 </th>
                             </tr>
                         </thead>
@@ -168,6 +180,9 @@ export function ClipboardImportModal() {
                                     <td className="px-4 py-2.5 text-gray-500">
                                         {filoFrame.t ? formatTime(filoFrame.t) : '-'}
                                     </td>
+                                    <td className="px-4 py-2.5 text-gray-500 max-w-[140px] truncate" title={filoFrame.lens ?? ''}>
+                                        {filoFrame.lens ?? '-'}
+                                    </td>
                                     <td className="px-4 py-2.5 text-gray-500">
                                         {filoFrame.aperture != null
                                             ? `f/${filoFrame.aperture}`
@@ -175,6 +190,9 @@ export function ClipboardImportModal() {
                                     </td>
                                     <td className="px-4 py-2.5 text-gray-500">
                                         {filoFrame.shutter ?? '-'}
+                                    </td>
+                                    <td className="px-4 py-2.5 text-gray-500 max-w-[160px] truncate" title={filoFrame.memo ?? ''}>
+                                        {filoFrame.memo ?? '-'}
                                     </td>
                                 </tr>
                             ))}
