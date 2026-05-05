@@ -171,7 +171,7 @@ function FrameRow({ frame, onPreview }: { frame: FrameItem; onPreview: (file: Fi
 
 export function FrameTable() {
     const { frames, selectedIds, selectAll, clearSelection } = useFrameStore();
-    const [sortKey, setSortKey] = useState<SortKey | null>(null);
+    const [sortKey, setSortKey] = useState<SortKey | null>('frameNumber');
     const [sortDir, setSortDir] = useState<SortDir>('asc');
     const [previewFile, setPreviewFile] = useState<File | null>(null);
 
