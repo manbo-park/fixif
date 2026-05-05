@@ -75,7 +75,7 @@ export function ImagePreviewModal({
         updateFrameRotation(frame.id, normalized);
     };
 
-    const normalizedRotation = (((displayRotation % 360) + 360) % 360);
+    const normalizedRotation = ((displayRotation % 360) + 360) % 360;
     const is90or270 = normalizedRotation === 90 || normalizedRotation === 270;
 
     return (
@@ -219,7 +219,7 @@ export function ImagePreviewModal({
                             <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
                             <path d="M3 3v5h5" />
                         </svg>
-                        왼쪽으로 90° 회전
+                        왼쪽으로 90° 회전(Q)
                     </button>
                     <button
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors"
@@ -238,15 +238,18 @@ export function ImagePreviewModal({
                             <path d="M21 12a9 9 0 1 1-9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
                             <path d="M21 3v5h-5" />
                         </svg>
-                        오른쪽으로 90° 회전
+                        오른쪽으로 90° 회전(E)
                     </button>
                     {normalizedRotation !== 0 && (
                         <button
                             className="px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors"
-                            onClick={() => { setDisplayRotation(0); updateFrameRotation(frame.id, 0); }}
+                            onClick={() => {
+                                setDisplayRotation(0);
+                                updateFrameRotation(frame.id, 0);
+                            }}
                             title="회전 초기화"
                         >
-                            초기화
+                            초기화(R)
                         </button>
                     )}
                 </div>
