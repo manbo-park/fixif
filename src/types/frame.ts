@@ -20,6 +20,7 @@ export interface FrameItem {
     file: File;
     thumbnailUrl: string;
     frameNumber: number | null;
+    rotation: 0 | 90 | 180 | 270;
     meta: FrameMeta;
     originalMeta: FrameMeta;
     errors: Partial<Record<keyof FrameMeta, string>>;

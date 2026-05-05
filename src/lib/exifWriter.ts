@@ -74,7 +74,7 @@ function encodeUserComment(text: string): string {
     return prefix + body;
 }
 
-async function fileToBinaryString(file: File): Promise<string> {
+async function fileToBinaryString(file: Blob): Promise<string> {
     const buffer = await file.arrayBuffer();
     const bytes = new Uint8Array(buffer);
     let str = '';
@@ -99,10 +99,15 @@ export interface WriteExifOptions {
     includeMemo?: boolean;
 }
 
-export async function writeExif(file: File, meta: FrameMeta, options: WriteExifOptions = {}): Promise<Blob> {
+export async function writeExif(file: Blob, meta: FrameMeta, options: WriteExifOptions = {}): Promise<Blob> {
     const { includeGps = true, includeMemo = true } = options;
     const binaryStr = await fileToBinaryString(file);
-    const exifObj = piexif.load(binaryStr);
+    let exifObj: ReturnType<typeof piexif.load>;
+    try {
+        exifObj = piexif.load(binaryStr);
+    } catch {
+        exifObj = {} as ReturnType<typeof piexif.load>;
+    }
 
     if (!exifObj['0th']) exifObj['0th'] = {};
     if (!exifObj['Exif']) exifObj['Exif'] = {};

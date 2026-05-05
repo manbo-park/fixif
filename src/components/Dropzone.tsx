@@ -35,6 +35,7 @@ export function Dropzone() {
                     file,
                     thumbnailUrl,
                     frameNumber: extractFrameNumber(file.name),
+                    rotation: 0,
                     meta: { ...meta },
                     originalMeta: { ...meta },
                     errors: {},

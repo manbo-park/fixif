@@ -21,6 +21,7 @@ interface FrameStore {
     updateFrameMeta: (id: string, patch: Partial<FrameMeta>) => void;
     batchUpdateMeta: (ids: string[], patch: Partial<FrameMeta>) => void;
     updateFrameNumber: (id: string, n: number | null) => void;
+    updateFrameRotation: (id: string, rotation: 0 | 90 | 180 | 270) => void;
 }
 
 export const useFrameStore = create<FrameStore>((set, get) => ({
@@ -96,5 +97,10 @@ export const useFrameStore = create<FrameStore>((set, get) => ({
     updateFrameNumber: (id, n) =>
         set((state) => ({
             frames: state.frames.map((f) => (f.id === id ? { ...f, frameNumber: n } : f)),
+        })),
+
+    updateFrameRotation: (id, rotation) =>
+        set((state) => ({
+            frames: state.frames.map((f) => (f.id === id ? { ...f, rotation } : f)),
         })),
 }));
