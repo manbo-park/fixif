@@ -86,6 +86,32 @@ async function fileToBinaryString(file: Blob): Promise<string> {
     return str;
 }
 
+// evoto 등 편집 앱은 XMP(APP1)와 Photoshop/IPTC(APP13)에도 날짜를 중복 기록한다.
+// piexifjs는 EXIF만 갱신하므로 이 사본들이 남아 뷰어가 낡은 날짜를 읽는다.
+// EXIF를 단일 기준으로 만들기 위해 두 세그먼트를 제거한다. (ICC 색 프로파일 APP2는 유지)
+function stripConflictingMetadata(bin: string): string {
+    let out = bin.slice(0, 2); // SOI
+    let i = 2;
+    while (i < bin.length) {
+        if (bin.charCodeAt(i) !== 0xff) {
+            out += bin.slice(i);
+            break;
+        }
+        const marker = bin.charCodeAt(i + 1);
+        if (marker === 0xda) {
+            out += bin.slice(i); // SOS 이후 압축 데이터는 원본 유지
+            break;
+        }
+        const len = (bin.charCodeAt(i + 2) << 8) | bin.charCodeAt(i + 3);
+        const payload = bin.slice(i + 4, i + 2 + len);
+        const isXmp = marker === 0xe1 && payload.startsWith('http://ns.adobe.com/xap');
+        const isApp13 = marker === 0xed; // Photoshop IRB / IPTC
+        if (!isXmp && !isApp13) out += bin.slice(i, i + 2 + len);
+        i += 2 + len;
+    }
+    return out;
+}
+
 function binaryStringToBlob(str: string): Blob {
     const bytes = new Uint8Array(str.length);
     for (let i = 0; i < str.length; i++) {
@@ -188,6 +214,6 @@ export async function writeExif(file: Blob, meta: FrameMeta, options: WriteExifO
     }
 
     const exifBytes = piexif.dump(exifObj);
-    const newBinaryStr = piexif.insert(exifBytes, binaryStr);
+    const newBinaryStr = stripConflictingMetadata(piexif.insert(exifBytes, binaryStr));
     return binaryStringToBlob(newBinaryStr);
 }
