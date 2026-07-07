@@ -60,6 +60,13 @@ function buildZipStamp(): string {
     return `${y}${mo}${d}-${h}${mi}${s}`;
 }
 
+// JSZip은 DOS 시간을 getUTC*로 기록하지만 ZIP 포맷엔 타임존이 없어 OS가 로컬로 해석한다.
+// 오프셋만큼 당겨 로컬 벽시계 값이 UTC 필드에 담기게 보정한다.
+function zipLocalDate(): Date {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+}
+
 const DEFAULT_SUFFIX = '_fixif';
 
 export async function exportFrames(
@@ -85,7 +92,7 @@ export async function exportFrames(
         frames.map(async (frame) => {
             const source = await toSource(frame);
             const blob = await writeExif(source, frame.meta, options);
-            zip.file(buildFilename(frame.file.name, suffix), blob);
+            zip.file(buildFilename(frame.file.name, suffix), blob, { date: zipLocalDate() });
         }),
     );
 
