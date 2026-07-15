@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> 이 프로젝트는 **[darkroom](https://github.com/manbo-park/darkroom)** 모노레포로 이전되었습니다.
+> 최신 소스는 👉 **https://github.com/manbo-park/darkroom/tree/main/apps/fixif**
+> 이 저장소는 아카이브(읽기 전용)로 보존됩니다.
+
 # fixif
 
 > Easy EXIF Edit
